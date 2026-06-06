@@ -12,7 +12,7 @@ COPY *.xml ./
 RUN mvn package -Dversion.application=${VERSION}
 
 # release
-FROM openjdk:11
+FROM azul/zulu-openjdk-alpine:16.0.1-jre
 ARG VERSION=${VERSION}
 WORKDIR /app
 # создаём пользователя jaruser
