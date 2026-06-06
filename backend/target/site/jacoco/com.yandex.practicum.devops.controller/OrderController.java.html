@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>OrderController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">sausage-store</a> &gt; <a href="index.source.html" class="el_package">com.yandex.practicum.devops.controller</a> &gt; <span class="el_source">OrderController.java</span></div><h1>OrderController.java</h1><pre class="source lang-java linenums">package com.yandex.practicum.devops.controller;
+
+import com.yandex.practicum.devops.dto.OrderProductDto;
+import com.yandex.practicum.devops.exception.ResourceNotFoundException;
+import com.yandex.practicum.devops.model.Order;
+import com.yandex.practicum.devops.model.OrderProduct;
+import com.yandex.practicum.devops.model.OrderStatus;
+import com.yandex.practicum.devops.service.OrderProductService;
+import com.yandex.practicum.devops.service.OrderService;
+import com.yandex.practicum.devops.service.ProductService;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.util.CollectionUtils;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+
+import javax.validation.constraints.NotNull;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
+
+@RestController
+@RequestMapping(&quot;/api/orders&quot;)
+public class OrderController {
+
+    ProductService productService;
+    OrderService orderService;
+    OrderProductService orderProductService;
+
+<span class="fc" id="L32">    public OrderController(ProductService productService, OrderService orderService, OrderProductService orderProductService) {</span>
+<span class="fc" id="L33">        this.productService = productService;</span>
+<span class="fc" id="L34">        this.orderService = orderService;</span>
+<span class="fc" id="L35">        this.orderProductService = orderProductService;</span>
+<span class="fc" id="L36">    }</span>
+
+    @GetMapping
+    @ResponseStatus(HttpStatus.OK)
+    public @NotNull Iterable&lt;Order&gt; list() {
+<span class="fc" id="L41">        return this.orderService.getAllOrders();</span>
+    }
+
+    @PostMapping
+    public ResponseEntity&lt;Order&gt; create(@RequestBody OrderForm form) {
+<span class="fc" id="L46">        List&lt;OrderProductDto&gt; formDtos = form.getProductOrders();</span>
+<span class="fc" id="L47">        validateProductsExistence(formDtos);</span>
+<span class="fc" id="L48">        Order order = new Order();</span>
+<span class="fc" id="L49">        order.setStatus(OrderStatus.PAID.name());</span>
+<span class="fc" id="L50">        order = this.orderService.create(order);</span>
+
+<span class="fc" id="L52">        List&lt;OrderProduct&gt; orderProducts = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L53" title="All 2 branches covered.">        for (OrderProductDto dto : formDtos) {</span>
+<span class="fc" id="L54">            orderProducts.add(orderProductService.create(new OrderProduct(order, productService.getProduct(dto</span>
+<span class="fc" id="L55">              .getProduct()</span>
+<span class="fc" id="L56">              .getId()), dto.getQuantity())));</span>
+<span class="fc" id="L57">        }</span>
+
+<span class="fc" id="L59">        order.setOrderProducts(orderProducts);</span>
+
+<span class="fc" id="L61">        this.orderService.update(order);</span>
+
+        String uri = ServletUriComponentsBuilder
+<span class="fc" id="L64">          .fromCurrentServletMapping()</span>
+<span class="fc" id="L65">          .path(&quot;/orders/{id}&quot;)</span>
+<span class="fc" id="L66">          .buildAndExpand(order.getId())</span>
+<span class="fc" id="L67">          .toString();</span>
+<span class="fc" id="L68">        HttpHeaders headers = new HttpHeaders();</span>
+<span class="fc" id="L69">        headers.add(&quot;Location&quot;, uri);</span>
+
+<span class="fc" id="L71">        return new ResponseEntity&lt;&gt;(order, headers, HttpStatus.CREATED);</span>
+    }
+
+    private void validateProductsExistence(List&lt;OrderProductDto&gt; orderProducts) {
+<span class="fc" id="L75">        List&lt;OrderProductDto&gt; list = orderProducts</span>
+<span class="fc" id="L76">          .stream()</span>
+<span class="fc" id="L77">          .filter(op -&gt; Objects.isNull(productService.getProduct(op</span>
+<span class="fc" id="L78">            .getProduct()</span>
+<span class="fc" id="L79">            .getId())))</span>
+<span class="fc" id="L80">          .collect(Collectors.toList());</span>
+
+<span class="pc bpc" id="L82" title="1 of 2 branches missed.">        if (!CollectionUtils.isEmpty(list)) {</span>
+<span class="nc" id="L83">            throw new ResourceNotFoundException(&quot;Product not found&quot;);</span>
+        }
+<span class="fc" id="L85">    }</span>
+
+<span class="fc" id="L87">    public static class OrderForm {</span>
+
+        private List&lt;OrderProductDto&gt; productOrders;
+
+        public List&lt;OrderProductDto&gt; getProductOrders() {
+<span class="fc" id="L92">            return productOrders;</span>
+        }
+
+        public void setProductOrders(List&lt;OrderProductDto&gt; productOrders) {
+<span class="fc" id="L96">            this.productOrders = productOrders;</span>
+<span class="fc" id="L97">        }</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.7.202105040129</span></div></body></html>

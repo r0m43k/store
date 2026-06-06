@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>OrderServiceImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">sausage-store</a> &gt; <a href="index.source.html" class="el_package">com.yandex.practicum.devops.service</a> &gt; <span class="el_source">OrderServiceImpl.java</span></div><h1>OrderServiceImpl.java</h1><pre class="source lang-java linenums">package com.yandex.practicum.devops.service;
+
+import com.yandex.practicum.devops.model.Order;
+import com.yandex.practicum.devops.repository.OrderRepository;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDate;
+
+@Service
+@Transactional
+public class OrderServiceImpl implements OrderService {
+
+    private OrderRepository orderRepository;
+    private BusinessMetricsService metricsService;
+
+<span class="fc" id="L17">    public OrderServiceImpl(OrderRepository orderRepository, BusinessMetricsService metricsService) {</span>
+<span class="fc" id="L18">        this.orderRepository = orderRepository;</span>
+<span class="fc" id="L19">        this.metricsService = metricsService;</span>
+<span class="fc" id="L20">    }</span>
+
+    @Override
+    public Iterable&lt;Order&gt; getAllOrders() {
+<span class="fc" id="L24">        return this.orderRepository.findAll();</span>
+    }
+
+    @Override
+    public Order create(Order order) {
+<span class="fc" id="L29">        order.setDateCreated(LocalDate.now());</span>
+<span class="fc" id="L30">        metricsService.initOrderCounters();</span>
+<span class="fc" id="L31">        Order o = this.orderRepository.save(order);</span>
+<span class="fc" id="L32">        metricsService.orderSausage(o);</span>
+<span class="fc" id="L33">        return o;</span>
+    }
+
+    @Override
+    public void update(Order order) {
+<span class="fc" id="L38">        this.orderRepository.save(order);</span>
+<span class="fc" id="L39">        metricsService.orderSausage(order);</span>
+
+<span class="fc" id="L41">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.7.202105040129</span></div></body></html>

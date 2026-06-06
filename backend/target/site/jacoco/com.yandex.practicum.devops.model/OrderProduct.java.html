@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>OrderProduct.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">sausage-store</a> &gt; <a href="index.source.html" class="el_package">com.yandex.practicum.devops.model</a> &gt; <span class="el_source">OrderProduct.java</span></div><h1>OrderProduct.java</h1><pre class="source lang-java linenums">package com.yandex.practicum.devops.model;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import javax.persistence.Column;
+import javax.persistence.EmbeddedId;
+import javax.persistence.Entity;
+import javax.persistence.Transient;
+
+@Entity
+public class OrderProduct {
+
+    @EmbeddedId
+    @JsonIgnore
+    private OrderProductPK pk;
+
+    @Column(nullable = false) private Integer quantity;
+
+    public OrderProduct() {
+<span class="fc" id="L20">        super();</span>
+<span class="fc" id="L21">    }</span>
+
+<span class="fc" id="L23">    public OrderProduct(Order order, Product product, Integer quantity) {</span>
+<span class="fc" id="L24">        pk = new OrderProductPK();</span>
+<span class="fc" id="L25">        pk.setOrder(order);</span>
+<span class="fc" id="L26">        pk.setProduct(product);</span>
+<span class="fc" id="L27">        this.quantity = quantity;</span>
+<span class="fc" id="L28">    }</span>
+
+    @Transient
+    public Product getProduct() {
+<span class="fc" id="L32">        return this.pk.getProduct();</span>
+    }
+
+    @Transient
+    public Double getTotalPrice() {
+<span class="fc" id="L37">        return getProduct().getPrice() * getQuantity();</span>
+    }
+
+    public OrderProductPK getPk() {
+<span class="fc" id="L41">        return pk;</span>
+    }
+
+    public void setPk(OrderProductPK pk) {
+<span class="nc" id="L45">        this.pk = pk;</span>
+<span class="nc" id="L46">    }</span>
+
+    public Integer getQuantity() {
+<span class="fc" id="L49">        return quantity;</span>
+    }
+
+    public void setQuantity(Integer quantity) {
+<span class="fc" id="L53">        this.quantity = quantity;</span>
+<span class="fc" id="L54">    }</span>
+
+    @Override
+    public int hashCode() {
+<span class="fc" id="L58">        final int prime = 31;</span>
+<span class="fc" id="L59">        int result = 1;</span>
+<span class="pc bpc" id="L60" title="1 of 2 branches missed.">        result = prime * result + ((pk == null) ? 0 : pk.hashCode());</span>
+
+<span class="fc" id="L62">        return result;</span>
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+<span class="nc bnc" id="L67" title="All 2 branches missed.">        if (this == obj) {</span>
+<span class="nc" id="L68">            return true;</span>
+        }
+<span class="nc bnc" id="L70" title="All 2 branches missed.">        if (obj == null) {</span>
+<span class="nc" id="L71">            return false;</span>
+        }
+<span class="nc bnc" id="L73" title="All 2 branches missed.">        if (getClass() != obj.getClass()) {</span>
+<span class="nc" id="L74">            return false;</span>
+        }
+<span class="nc" id="L76">        OrderProduct other = (OrderProduct) obj;</span>
+
+<span class="nc bnc" id="L78" title="All 2 branches missed.">        if (pk == null) {</span>
+<span class="nc bnc" id="L79" title="All 2 branches missed.">            return other.pk == null;</span>
+        }
+<span class="nc" id="L81">        else return pk.equals(other.pk);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.7.202105040129</span></div></body></html>

@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>OrderProductPK.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">sausage-store</a> &gt; <a href="index.source.html" class="el_package">com.yandex.practicum.devops.model</a> &gt; <span class="el_source">OrderProductPK.java</span></div><h1>OrderProductPK.java</h1><pre class="source lang-java linenums">package com.yandex.practicum.devops.model;
+
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+
+import javax.persistence.Embeddable;
+import javax.persistence.FetchType;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import java.io.Serializable;
+
+@Embeddable
+@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = &quot;order&quot;)
+<span class="fc" id="L14">public class OrderProductPK implements Serializable {</span>
+
+    private static final long serialVersionUID = 476151177562655457L;
+
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(name = &quot;order_id&quot;)
+    private Order order;
+
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(name = &quot;product_id&quot;)
+    private Product product;
+
+    public Order getOrder() {
+<span class="nc" id="L27">        return order;</span>
+    }
+
+    public void setOrder(Order order) {
+<span class="fc" id="L31">        this.order = order;</span>
+<span class="fc" id="L32">    }</span>
+
+    public Product getProduct() {
+<span class="fc" id="L35">        return product;</span>
+    }
+
+    public void setProduct(Product product) {
+<span class="fc" id="L39">        this.product = product;</span>
+<span class="fc" id="L40">    }</span>
+
+    @Override
+    public int hashCode() {
+<span class="nc" id="L44">        final int prime = 31;</span>
+<span class="nc" id="L45">        int result = 1;</span>
+
+<span class="nc bnc" id="L47" title="All 2 branches missed.">        result = prime * result + ((order.getId() == null)</span>
+<span class="nc" id="L48">          ? 0</span>
+          : order
+<span class="nc" id="L50">            .getId()</span>
+<span class="nc" id="L51">            .hashCode());</span>
+<span class="nc bnc" id="L52" title="All 2 branches missed.">        result = prime * result + ((product.getId() == null)</span>
+<span class="nc" id="L53">          ? 0</span>
+          : product
+<span class="nc" id="L55">            .getId()</span>
+<span class="nc" id="L56">            .hashCode());</span>
+
+<span class="nc" id="L58">        return result;</span>
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+<span class="nc bnc" id="L63" title="All 2 branches missed.">        if (this == obj) {</span>
+<span class="nc" id="L64">            return true;</span>
+        }
+<span class="nc bnc" id="L66" title="All 2 branches missed.">        if (obj == null) {</span>
+<span class="nc" id="L67">            return false;</span>
+        }
+<span class="nc bnc" id="L69" title="All 2 branches missed.">        if (getClass() != obj.getClass()) {</span>
+<span class="nc" id="L70">            return false;</span>
+        }
+<span class="nc" id="L72">        OrderProductPK other = (OrderProductPK) obj;</span>
+<span class="nc bnc" id="L73" title="All 2 branches missed.">        if (order == null) {</span>
+<span class="nc bnc" id="L74" title="All 2 branches missed.">            if (other.order != null) {</span>
+<span class="nc" id="L75">                return false;</span>
+            }
+<span class="nc bnc" id="L77" title="All 2 branches missed.">        } else if (!order.equals(other.order)) {</span>
+<span class="nc" id="L78">            return false;</span>
+        }
+
+<span class="nc bnc" id="L81" title="All 2 branches missed.">        if (product == null) {</span>
+<span class="nc bnc" id="L82" title="All 2 branches missed.">            if (other.product != null) {</span>
+<span class="nc" id="L83">                return false;</span>
+            }
+<span class="nc bnc" id="L85" title="All 2 branches missed.">        } else if (!product.equals(other.product)) {</span>
+<span class="nc" id="L86">            return false;</span>
+        }
+
+<span class="nc" id="L89">        return true;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.7.202105040129</span></div></body></html>
