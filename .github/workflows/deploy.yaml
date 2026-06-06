@@ -70,6 +70,8 @@ jobs:
       needs: build_and_push_to_docker_hub
 
       steps:
+        - name: Skip Helm chart push
+          run: echo "Skip Helm chart push for now"
       #### Опишите необходимые шаги
 
   # Деплоим приложения в кластер Kubernetes с помощью helm-чарт
@@ -79,4 +81,6 @@ jobs:
       needs: add_helm_chart_to_nexus
 
       steps:
+        - name: Skip Kubernetes deploy
+          run: echo "Skip Kubernetes deploy for now"
       #### Опишите необходимые шаги
