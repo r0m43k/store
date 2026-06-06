@@ -12,6 +12,8 @@ COPY *.xml ./
 RUN mvn package -Dversion.application=${VERSION}
 
 # release
+# openJDK на докерхабе больше не подходит, поэтому образ был изменен
+# см hub.docker.com/_/openjdk
 FROM azul/zulu-openjdk-alpine:16.0.1-jre
 ARG VERSION=${VERSION}
 WORKDIR /app

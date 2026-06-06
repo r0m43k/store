@@ -1,4 +1,4 @@
-// Таблицы были выявлены на основе сущностей в коде
+-- Таблицы были выявлены на основе сущностей в коде
 CREATE TABLE product (
     id BIGSERIAL PRIMARY KEY,
     name VARCHAR(100) NOT NULL,

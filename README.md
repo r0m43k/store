@@ -21,6 +21,20 @@ cd target
 java -jar sausage-store-0.0.1-SNAPSHOT.jar
 ```
 
+Обновил + подтверждение применения миграций
+
+```bash
+cd ~/store/backend
+set -a
+source .env
+set +a
+mvn package
+java -jar target/sausage-store-${VERSION}.jar \
+  --spring.datasource.url=jdbc:postgresql://${PSQL_HOST}:${PSQL_PORT}/${PSQL_DBNAME} \
+  --spring.datasource.username=${PSQL_USER} \
+  --spring.datasource.password=${PSQL_PASSWORD}
+```
+
 ### Frontend
 
 Install NodeJS and npm on your computer and run:
