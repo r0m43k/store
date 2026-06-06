@@ -12,9 +12,7 @@ COPY *.xml ./
 RUN mvn package -Dversion.application=${VERSION}
 
 # release
-# На оф странице openjdk устарел 
-# см https://hub.docker.com/_/openjdk
-FROM eclipse-temurin:16-jdk-alpine
+FROM openjdk:11
 ARG VERSION=${VERSION}
 WORKDIR /app
 # создаём пользователя jaruser
