@@ -27,9 +27,9 @@ spec:
                 name: {{ .Release.Name }}-{{ .Chart.Name }}-conf
                 key: PORT
           - name: DB
-        valueFrom:
-          secretKeyRef:
-            name: {{ .Release.Name }}-{{ .Chart.Name }}-secret
-            key: DB
-      resources:
-        {{ toYaml .Values.resources | indent 10 }}
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Release.Name }}-{{ .Chart.Name }}-secret
+                key: DB
+        resources:
+{{ toYaml .Values.resources | indent 10 }}

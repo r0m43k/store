@@ -15,7 +15,7 @@ frontend:
   service:
     port: 80
   ingress:
-    host: front-r-devops-magistracy-project-2sem-1766404076.students-projects.ru # Корректный домен будет указан в задании
+    host: front-r-devops-magistracy-project-2sem-1766404076.2sem.students-projects.ru # Корректный домен будет указан в задании
     tlsSecretName: 2sem-students-projects-wildcard-secret
     path: /
     pathType: Prefix
@@ -45,8 +45,12 @@ backend:
     port: 8080
   revisionHistoryLimit: 15
   replicas: 1
+  ### Cтратегия RollingUpdate для бэкенда
   strategy:
-  ### Опишите стратегию RollingUpdate для бэкенда
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
   image: r0m43k/sausage-backend:latest
   imagePullPolicy: Always
   resources:
@@ -57,11 +61,28 @@ backend:
       memory: "512Mi"
       cpu: "1"
   containerPort: 8080
+  ### LivenessProbe для бэкенда
   livenessProbe:
-  ### Опишите LivenessProbe для бэкенда
+    httpGet:
+      path: /actuator/health
+      port: 8080
+    initialDelaySeconds: 30
+    periodSeconds: 15
+  ### VPA для бэкенда
   vpa:
-  ### Опишите VPA для бэкенда
-
+    updatePolicy:
+      updateMode: "Off"
+    resourcePolicy:
+      containerPolicies:
+        - containerName: backend
+          minAllowed:
+            cpu: "100m"
+            memory: "256Mi"
+          maxAllowed:
+            cpu: "1"
+            memory: "512Mi"
+          controlledResources: ["cpu", "memory"]
+  
 backend-report:
   replicas: 1
   strategy:
@@ -69,7 +90,7 @@ backend-report:
   image: r0m43k/sausage-backend-report:latest
   containerPort: 8080
   env:
-    db: "mongodb://root:rootpassword@mongodb:27017/sausage-store?authSource=admin"
+    db: "mongodb://reports:reportspassword@mongodb:27017/sausage-store"
     port: 8080
   resources:
     requests:
@@ -83,6 +104,10 @@ backend-report:
 ### Приложение использует переменную PORT - порт, на котором оно запустится и DB - Uri-подключение к mongodb. 
 ### DB положите в Secret, PORT в ConfigMap
 ### Опишите HPA для backend-report
+  hpa:
+    minReplicas: 1
+    maxReplicas: 3
+    averageUtilization: 75
 
 infra:
   postgresql:

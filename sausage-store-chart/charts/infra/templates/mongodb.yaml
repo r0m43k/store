@@ -1,5 +1,5 @@
 apiVersion: apps/v1
-kind:   
+kind: StatefulSet
 metadata:
   name: mongodb
   annotations:
