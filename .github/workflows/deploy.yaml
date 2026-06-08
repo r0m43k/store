@@ -70,9 +70,18 @@ jobs:
       needs: build_and_push_to_docker_hub
 
       steps:
-        - name: Skip Helm chart push
-          run: echo "Skip Helm chart push for now"
-      #### Опишите необходимые шаги
+        - name: Check out the repo
+          uses: actions/checkout@v3
+
+        - name: Package Helm chart
+          run: helm package ./sausage-store-chart
+
+        - name: Upload Helm chart to Nexus
+          run: |
+            CHART_PACKAGE=$(ls sausage-store-*.tgz)
+            curl -u "$NEXUS_HELM_REPO_USER:$NEXUS_HELM_REPO_PASSWORD" \
+              --upload-file "$CHART_PACKAGE" \
+              "$NEXUS_HELM_REPO/$CHART_PACKAGE"
 
   # Деплоим приложения в кластер Kubernetes с помощью helm-чарт
   deploy_helm_chart_to_kubernetes:
