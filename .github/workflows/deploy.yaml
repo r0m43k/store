@@ -9,7 +9,7 @@ env:
   NEXUS_HELM_REPO: ${{ secrets.NEXUS_HELM_REPO }}
   NEXUS_HELM_REPO_USER: ${{ secrets.NEXUS_HELM_REPO_USER }}
   NEXUS_HELM_REPO_PASSWORD: ${{ secrets.NEXUS_HELM_REPO_PASSWORD }}
-  SAUSAGE_STORE_NAMESPACE: YOUR_NAMESPACE
+  SAUSAGE_STORE_NAMESPACE: ${{ secrets.NAMESPACE }}
   KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
   VAULT_TOKEN: ${{ secrets.VAULT_TOKEN }}
 
@@ -90,6 +90,20 @@ jobs:
       needs: add_helm_chart_to_nexus
 
       steps:
-        - name: Skip Kubernetes deploy
-          run: echo "Skip Kubernetes deploy for now"
-      #### Опишите необходимые шаги
+        - name: Deploy Helm Chart to Kubernetes
+          run: |
+            helm repo add nexus "$NEXUS_HELM_REPO" \
+              --username "$NEXUS_HELM_REPO_USER" \
+              --password "$NEXUS_HELM_REPO_PASSWORD"
+            helm repo update
+
+        - name: Confiigure kubeconfig
+          run: |
+            mkdir -p $HOME/.kube
+            echo "$KUBE_CONFIG" > ~/.kube/config
+            chmod 600 ~/.kube/config
+
+        - name: Deploy Helm Chart
+          run: |
+            helm upgrade --install sausage-store nexus/sausage-store-chart \
+              --namespace $SAUSAGE_STORE_NAMESPACE --create-namespace
