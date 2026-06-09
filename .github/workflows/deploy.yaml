@@ -6,6 +6,7 @@ on:
       - main
 
 env:
+  HELM_CHART_VERSION: 0.1.${{ github.run_number }}-${{ github.run_attempt }}
   NEXUS_HELM_REPO: ${{ secrets.NEXUS_HELM_REPO }}
   NEXUS_HELM_REPO_USER: ${{ secrets.NEXUS_HELM_REPO_USER }}
   NEXUS_HELM_REPO_PASSWORD: ${{ secrets.NEXUS_HELM_REPO_PASSWORD }}
@@ -73,15 +74,25 @@ jobs:
         - name: Check out the repo
           uses: actions/checkout@v3
 
+        - name: Set up Helm
+          uses: azure/setup-helm@v4
+
         - name: Package Helm chart
-          run: helm package ./sausage-store-chart
+          run: |
+            mkdir -p packaged-chart
+            helm package ./sausage-store-chart \
+              --destination packaged-chart \
+              --version "$HELM_CHART_VERSION" \
+              --app-version "${{ github.sha }}"
 
         - name: Upload Helm chart to Nexus
           run: |
-            CHART_PACKAGE=$(ls sausage-store-*.tgz)
-            curl -u "$NEXUS_HELM_REPO_USER:$NEXUS_HELM_REPO_PASSWORD" \
+            CHART_PACKAGE=$(ls packaged-chart/*.tgz | head -n 1)
+
+            curl --fail --silent --show-error \
+              --user "$NEXUS_HELM_REPO_USER:$NEXUS_HELM_REPO_PASSWORD" \
               --upload-file "$CHART_PACKAGE" \
-              "$NEXUS_HELM_REPO/$CHART_PACKAGE"
+              "${NEXUS_HELM_REPO%/}/"
 
   # Деплоим приложения в кластер Kubernetes с помощью helm-чарт
   deploy_helm_chart_to_kubernetes:
@@ -90,13 +101,12 @@ jobs:
       needs: add_helm_chart_to_nexus
 
       steps:
-        - name: Deploy Helm Chart to Kubernetes
-          run: |
-            helm repo add nexus "$NEXUS_HELM_REPO" \
-              --username "$NEXUS_HELM_REPO_USER" \
-              --password "$NEXUS_HELM_REPO_PASSWORD"
-            helm repo update
+        - name: Set up Helm
+          uses: azure/setup-helm@v4
 
+        - name: Set up kubectl
+          uses: azure/setup-kubectl@v4
+        
         - name: Confiigure kubeconfig
           run: |
             mkdir -p $HOME/.kube
@@ -105,5 +115,13 @@ jobs:
 
         - name: Deploy Helm Chart
           run: |
-            helm upgrade --install sausage-store nexus/sausage-store-chart \
-              --namespace $SAUSAGE_STORE_NAMESPACE --create-namespace
+            chart_package="/tmp/sausage-store-${HELM_CHART_VERSION}.tgz"
+
+            curl --fail --silent --show-error \
+              --user "$NEXUS_HELM_REPO_USER:$NEXUS_HELM_REPO_PASSWORD" \
+              --output "$chart_package" \
+              "${NEXUS_HELM_REPO%/}/sausage-store-${HELM_CHART_VERSION}.tgz"
+
+            helm upgrade --install sausage-store "$chart_package" \
+              --namespace "$SAUSAGE_STORE_NAMESPACE" \
+              --create-namespace
