@@ -2,25 +2,80 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: mongodb-init
+  namespace: {{ .Release.Namespace }}
   annotations:
-    helm.sh/hook: "post-install"
-    helm.sh/hook-weight: "5"
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "5"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+
 spec:
+  backoffLimit: 12
+  activeDeadlineSeconds: 600
+
   template:
+    metadata:
+      labels:
+        app: mongodb-init
+
     spec:
       restartPolicy: OnFailure
+
       containers:
-      - name: mongodb-init
-        image: mongo:7.0
-        command: 
-        - sh
-        - -c
-        - |
-          mongosh "mongodb://root:rootpassword@mongodb:27017/admin" --eval '
-            db = db.getSiblingDB("sausage-store");
-            db.createUser({
-              user: "reports",
-              pwd: "reportspassword",
-              roles: [{ role: "readWrite", db: "sausage-store" }]
-            });
-          '
+        - name: mongodb-init
+          image: {{ .Values.mongodbInit.image }}
+          imagePullPolicy: IfNotPresent
+
+          resources:
+{{ toYaml .Values.mongodbInit.resources | indent 12 }}
+
+          env:
+            - name: MONGO_ROOT_USERNAME
+              value: {{ .Values.mongodb.env.MONGO_INITDB_ROOT_USERNAME | quote }}
+
+            - name: MONGO_ROOT_PASSWORD
+              value: {{ .Values.mongodb.env.MONGO_INITDB_ROOT_PASSWORD | quote }}
+
+            - name: MONGO_PORT
+              value: {{ .Values.mongodb.containerPort | quote }}
+
+          command:
+            - sh
+            - -c
+            - |
+              set -eu
+
+              MONGO_URI="mongodb://${MONGO_ROOT_USERNAME}:${MONGO_ROOT_PASSWORD}@mongodb:${MONGO_PORT}/admin"
+
+              echo "Waiting for MongoDB..."
+
+              until mongosh "$MONGO_URI" \
+                --quiet \
+                --eval 'quit(db.runCommand({ping: 1}).ok ? 0 : 1)' \
+                >/dev/null 2>&1
+              do
+                echo "MongoDB is not ready. Retrying in 5 seconds..."
+                sleep 5
+              done
+
+              echo "MongoDB is ready"
+
+              mongosh "$MONGO_URI" --quiet --eval '
+                const applicationDb = db.getSiblingDB("sausage-store");
+
+                if (applicationDb.getUser("reports") === null) {
+                  applicationDb.createUser({
+                    user: "reports",
+                    pwd: "reportspassword",
+                    roles: [
+                      {
+                        role: "readWrite",
+                        db: "sausage-store"
+                      }
+                    ]
+                  });
+
+                  print("User reports created");
+                } else {
+                  print("User reports already exists");
+                }
+              '

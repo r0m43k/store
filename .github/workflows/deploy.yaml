@@ -125,5 +125,41 @@ jobs:
             helm upgrade --install sausage-store "$chart_package" \
               --namespace "$SAUSAGE_STORE_NAMESPACE" \
               --create-namespace \
-              --wait \
               --timeout 10m
+
+            kubectl rollout status statefulset/mongodb \
+              --namespace "$SAUSAGE_STORE_NAMESPACE" \
+              --timeout=10m
+
+            kubectl rollout status statefulset/postgresql \
+              --namespace "$SAUSAGE_STORE_NAMESPACE" \
+              --timeout=10m
+
+            kubectl rollout status deployment/sausage-store-backend \
+              --namespace "$SAUSAGE_STORE_NAMESPACE" \
+              --timeout=10m
+
+            kubectl rollout status deployment/sausage-store-backend-report \
+              --namespace "$SAUSAGE_STORE_NAMESPACE" \
+              --timeout=10m
+
+            kubectl rollout status deployment/sausage-store-frontend \
+              --namespace "$SAUSAGE_STORE_NAMESPACE" \
+              --timeout=10m
+        
+        - name: Show Kubernetes diagnostics
+          if: failure()
+          run: |
+            echo "=== RESOURCES ==="
+            kubectl get pods,deployments,statefulsets,jobs,pvc \
+              --namespace "$SAUSAGE_STORE_NAMESPACE" \
+              -o wide || true
+
+            echo "=== POD DESCRIPTIONS ==="
+            kubectl describe pods \
+              --namespace "$SAUSAGE_STORE_NAMESPACE" || true
+
+            echo "=== EVENTS ==="
+            kubectl get events \
+              --namespace "$SAUSAGE_STORE_NAMESPACE" \
+              --sort-by=.lastTimestamp || true
