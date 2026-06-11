@@ -146,7 +146,11 @@ jobs:
               --output "$chart_package" \
               "${NEXUS_HELM_REPO%/}/sausage-store-${HELM_CHART_VERSION}.tgz"
             
-            
+            if [ -z "$VAULT_TOKEN" ]; then
+              echo "VAULT_TOKEN GitHub secret is empty"
+              exit 1
+            fi
+
             helm upgrade --install sausage-store "$chart_package" \
               --namespace "$SAUSAGE_STORE_NAMESPACE" \
               --create-namespace \
@@ -159,6 +163,10 @@ jobs:
               --timeout=10m
 
             kubectl rollout status statefulset/postgresql \
+              --namespace "$SAUSAGE_STORE_NAMESPACE" \
+              --timeout=10m
+
+            kubectl rollout status statefulset/vault \
               --namespace "$SAUSAGE_STORE_NAMESPACE" \
               --timeout=10m
 
@@ -213,3 +221,8 @@ jobs:
             kubectl logs deployment/sausage-store-backend-report \
               --namespace "$SAUSAGE_STORE_NAMESPACE" \
               --previous --tail=200 || true
+
+            echo "=== VAULT LOGS ==="
+            kubectl logs statefulset/vault \
+              --namespace "$SAUSAGE_STORE_NAMESPACE" \
+              --tail=200 || true
