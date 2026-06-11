@@ -118,7 +118,7 @@ jobs:
           
         - name: Add Nexus Helm repository
           run: |
-            helm repo add nexus "${NEXUS_HELM_REPO%/}" \
+            helm repo add nexus "${NEXUS_HELM_REPO}" \
               --username "$NEXUS_HELM_REPO_USER" \
               --password "$NEXUS_HELM_REPO_PASSWORD" \
               --force-update
@@ -177,8 +177,17 @@ jobs:
               --sort-by=.lastTimestamp || true
 
             echo "=== MONGODB INIT LOGS ==="
-            kubectl logs job/mongodb-init \
-              --namespace "$SAUSAGE_STORE_NAMESPACE" || true
+            kubectl logs \
+              --selector app=mongodb-init \
+              --all-containers=true \
+              --prefix=true \
+              --namespace "$SAUSAGE_STORE_NAMESPACE" \
+              --tail=-1 || true
+
+            echo "=== MONGODB LOGS ==="
+            kubectl logs statefulset/mongodb \
+              --namespace "$SAUSAGE_STORE_NAMESPACE" \
+              --tail=200 || true
 
             echo "=== BACKEND LOGS ==="
             kubectl logs deployment/sausage-store-backend \

@@ -6,10 +6,10 @@ metadata:
   annotations:
     "helm.sh/hook": post-install,post-upgrade
     "helm.sh/hook-weight": "5"
-    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded,hook-failed
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
 
 spec:
-  backoffLimit: 6
+  backoffLimit: 3
   activeDeadlineSeconds: 600
 
   template:
@@ -44,49 +44,55 @@ spec:
             - |
               set -eu
 
+              MONGO_URI="mongodb://${MONGO_ROOT_USERNAME}:${MONGO_ROOT_PASSWORD}@mongodb:${MONGO_PORT}/admin?authSource=admin&serverSelectionTimeoutMS=5000&connectTimeoutMS=5000"
+
               echo "Waiting for MongoDB..."
 
-              until mongosh \
-                --host mongodb \
-                --port "$MONGO_PORT" \
-                --username "$MONGO_ROOT_USERNAME" \
-                --password "$MONGO_ROOT_PASSWORD" \
-                --authenticationDatabase admin \
-                --quiet \
-                --eval 'db.adminCommand({ ping: 1 })'
-              do
-                echo "MongoDB is not ready. Retrying in 5 seconds..."
+              attempt=1
+
+              while true; do
+                if output="$(mongosh "$MONGO_URI" \
+                  --quiet \
+                  --eval 'db.runCommand({ ping: 1 })' 2>&1)"
+                then
+                  echo "$output"
+                  echo "MongoDB is ready"
+                  break
+                fi
+
+                echo "MongoDB connection attempt ${attempt} failed:"
+                echo "$output"
+
+                if [ "$attempt" -ge 60 ]; then
+                  echo "MongoDB was not available after 60 attempts"
+                  exit 1
+                fi
+
+                attempt=$((attempt + 1))
                 sleep 5
               done
 
-              echo "MongoDB is ready. Creating reports user..."
+              echo "Creating reports user..."
 
-              mongosh \
-                --host mongodb \
-                --port "$MONGO_PORT" \
-                --username "$MONGO_ROOT_USERNAME" \
-                --password "$MONGO_ROOT_PASSWORD" \
-                --authenticationDatabase admin \
-                --quiet \
-                --eval '
-                  const applicationDb = db.getSiblingDB("sausage-store");
+              mongosh "$MONGO_URI" --quiet --eval '
+                const applicationDb = db.getSiblingDB("sausage-store");
 
-                  if (applicationDb.getUser("reports") === null) {
-                    applicationDb.createUser({
-                      user: "reports",
-                      pwd: "reportspassword",
-                      roles: [
-                        {
-                          role: "readWrite",
-                          db: "sausage-store"
-                        }
-                      ]
-                    });
+                if (applicationDb.getUser("reports") === null) {
+                  applicationDb.createUser({
+                    user: "reports",
+                    pwd: "reportspassword",
+                    roles: [
+                      {
+                        role: "readWrite",
+                        db: "sausage-store"
+                      }
+                    ]
+                  });
 
-                    print("User reports created");
-                  } else {
-                    print("User reports already exists");
-                  }
-                '
+                  print("User reports created");
+                } else {
+                  print("User reports already exists");
+                }
+              '
 
               echo "MongoDB initialization completed"
