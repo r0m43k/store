@@ -125,6 +125,18 @@ jobs:
                 
             helm repo update
 
+        - name: Clean old Helm revisions
+          run: |
+            kubectl get secrets \
+              --namespace "$SAUSAGE_STORE_NAMESPACE" \
+              --selector owner=helm,name=sausage-store \
+              -o jsonpath='{range .items[*]}{.metadata.creationTimestamp}{" "}{.metadata.name}{"\n"}{end}' \
+              | sort \
+              | head -n -2 \
+              | awk '{print $2}' \
+              | xargs -r kubectl delete secret \
+                  --namespace "$SAUSAGE_STORE_NAMESPACE"
+
         - name: Deploy Helm Chart
           run: |
             chart_package="/tmp/sausage-store-${HELM_CHART_VERSION}.tgz"
@@ -133,12 +145,14 @@ jobs:
               --user "$NEXUS_HELM_REPO_USER:$NEXUS_HELM_REPO_PASSWORD" \
               --output "$chart_package" \
               "${NEXUS_HELM_REPO%/}/sausage-store-${HELM_CHART_VERSION}.tgz"
-
+            
+            
             helm upgrade --install sausage-store "$chart_package" \
               --namespace "$SAUSAGE_STORE_NAMESPACE" \
               --create-namespace \
               --timeout 10m \
-              --disable-openapi-validation
+              --disable-openapi-validation \
+              --history-max 2
 
             kubectl rollout status statefulset/mongodb \
               --namespace "$SAUSAGE_STORE_NAMESPACE" \
