@@ -124,4 +124,6 @@ jobs:
 
             helm upgrade --install sausage-store "$chart_package" \
               --namespace "$SAUSAGE_STORE_NAMESPACE" \
-              --create-namespace
+              --create-namespace \
+              --wait \
+              --timeout 10m
