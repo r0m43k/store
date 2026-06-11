@@ -77,6 +77,9 @@ jobs:
         - name: Set up Helm
           uses: azure/setup-helm@v4
 
+        - name: Lint Helm chart
+          run: helm lint ./sausage-store-chart
+
         - name: Package Helm chart
           run: |
             mkdir -p packaged-chart
@@ -107,11 +110,20 @@ jobs:
         - name: Set up kubectl
           uses: azure/setup-kubectl@v4
         
-        - name: Confiigure kubeconfig
+        - name: Configure kubeconfig
           run: |
             mkdir -p $HOME/.kube
             echo "$KUBE_CONFIG" > ~/.kube/config
             chmod 600 ~/.kube/config
+          
+        - name: Add Nexus Helm repository
+          run: |
+            helm repo add nexus "${NEXUS_HELM_REPO%/}" \
+              --username "$NEXUS_HELM_REPO_USER" \
+              --password "$NEXUS_HELM_REPO_PASSWORD" \
+              --force-update
+                
+            helm repo update
 
         - name: Deploy Helm Chart
           run: |

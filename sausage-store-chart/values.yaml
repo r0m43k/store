@@ -141,12 +141,12 @@ infra:
         memory: "256Mi"
         cpu: "100m"
 
-  mongdbInitJob:
+  mongodbInit:
     image: mongo:7.0
     resources:
       requests:
         memory: "64Mi"
         cpu: "25m"
       limits:
-        memory: "Mi"
-        cpu: "100m" 
+        memory: "128Mi"
+        cpu: "100m"
