@@ -6,10 +6,10 @@ metadata:
   annotations:
     "helm.sh/hook": post-install,post-upgrade
     "helm.sh/hook-weight": "5"
-    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded,hook-failed
 
 spec:
-  backoffLimit: 12
+  backoffLimit: 6
   activeDeadlineSeconds: 600
 
   template:
@@ -44,38 +44,49 @@ spec:
             - |
               set -eu
 
-              MONGO_URI="mongodb://${MONGO_ROOT_USERNAME}:${MONGO_ROOT_PASSWORD}@mongodb:${MONGO_PORT}/admin"
-
               echo "Waiting for MongoDB..."
 
-              until mongosh "$MONGO_URI" \
+              until mongosh \
+                --host mongodb \
+                --port "$MONGO_PORT" \
+                --username "$MONGO_ROOT_USERNAME" \
+                --password "$MONGO_ROOT_PASSWORD" \
+                --authenticationDatabase admin \
                 --quiet \
-                --eval 'quit(db.runCommand({ping: 1}).ok ? 0 : 1)' \
-                >/dev/null 2>&1
+                --eval 'db.adminCommand({ ping: 1 })'
               do
                 echo "MongoDB is not ready. Retrying in 5 seconds..."
                 sleep 5
               done
 
-              echo "MongoDB is ready"
+              echo "MongoDB is ready. Creating reports user..."
 
-              mongosh "$MONGO_URI" --quiet --eval '
-                const applicationDb = db.getSiblingDB("sausage-store");
+              mongosh \
+                --host mongodb \
+                --port "$MONGO_PORT" \
+                --username "$MONGO_ROOT_USERNAME" \
+                --password "$MONGO_ROOT_PASSWORD" \
+                --authenticationDatabase admin \
+                --quiet \
+                --eval '
+                  const applicationDb = db.getSiblingDB("sausage-store");
 
-                if (applicationDb.getUser("reports") === null) {
-                  applicationDb.createUser({
-                    user: "reports",
-                    pwd: "reportspassword",
-                    roles: [
-                      {
-                        role: "readWrite",
-                        db: "sausage-store"
-                      }
-                    ]
-                  });
+                  if (applicationDb.getUser("reports") === null) {
+                    applicationDb.createUser({
+                      user: "reports",
+                      pwd: "reportspassword",
+                      roles: [
+                        {
+                          role: "readWrite",
+                          db: "sausage-store"
+                        }
+                      ]
+                    });
 
-                  print("User reports created");
-                } else {
-                  print("User reports already exists");
-                }
-              '
+                    print("User reports created");
+                  } else {
+                    print("User reports already exists");
+                  }
+                '
+
+              echo "MongoDB initialization completed"

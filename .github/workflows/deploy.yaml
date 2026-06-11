@@ -175,3 +175,17 @@ jobs:
             kubectl get events \
               --namespace "$SAUSAGE_STORE_NAMESPACE" \
               --sort-by=.lastTimestamp || true
+
+            echo "=== MONGODB INIT LOGS ==="
+            kubectl logs job/mongodb-init \
+              --namespace "$SAUSAGE_STORE_NAMESPACE" || true
+
+            echo "=== BACKEND LOGS ==="
+            kubectl logs deployment/sausage-store-backend \
+              --namespace "$SAUSAGE_STORE_NAMESPACE" \
+              --previous --tail=200 || true
+
+            echo "=== BACKEND REPORT LOGS ==="
+            kubectl logs deployment/sausage-store-backend-report \
+              --namespace "$SAUSAGE_STORE_NAMESPACE" \
+              --previous --tail=200 || true
