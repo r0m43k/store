@@ -137,7 +137,8 @@ jobs:
             helm upgrade --install sausage-store "$chart_package" \
               --namespace "$SAUSAGE_STORE_NAMESPACE" \
               --create-namespace \
-              --timeout 10m
+              --timeout 10m \
+              --disable-openapi-validation
 
             kubectl rollout status statefulset/mongodb \
               --namespace "$SAUSAGE_STORE_NAMESPACE" \
