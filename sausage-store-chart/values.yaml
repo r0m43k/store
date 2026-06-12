@@ -93,7 +93,7 @@ backend-report:
   env:
     db: "mongodb://reports:reportspassword@mongodb:27017/sausage-store"
     port: 8080
-    
+
   resources:
     requests:
       memory: "128Mi"
@@ -165,7 +165,7 @@ infra:
 
     resources:
       requests:
-        memory: "128Mi"
+        memory: "64Mi"
         cpu: "25m"
       limits:
         memory: "512Mi"

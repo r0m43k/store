@@ -156,7 +156,9 @@ jobs:
               --create-namespace \
               --timeout 10m \
               --disable-openapi-validation \
-              --history-max 2
+              --history-max 2 \
+              --set backend.replicas=1 \
+              --set-string global.vault.vaultToken="$VAULT_TOKEN"
 
             kubectl rollout status statefulset/mongodb \
               --namespace "$SAUSAGE_STORE_NAMESPACE" \
