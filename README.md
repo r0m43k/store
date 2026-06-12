@@ -158,14 +158,15 @@ kubectl get pods
 Ожидаемый результат:
 
 ```text
-└─$ kubectl get pods
-helm list
-NAME                                            READY   STATUS    RESTARTS         AGE
-mongodb-0                                       1/1     Running   0                6h27m
-postgresql-0                                    1/1     Running   0                6h27m
-sausage-store-backend-report-5dcf7bf587-bkzsw   1/1     Running   61 (3h51m ago)   8h
-sausage-store-frontend-958c66ffc-ljsf2          1/1     Running   0                6h27m
-vault-0                                         1/1     Running   0                36m
+└─$ kubectl get pods                                         
+NAME                                            READY   STATUS    RESTARTS          AGE
+mongodb-0                                       1/1     Running   0                 26h
+postgresql-0                                    1/1     Running   0                 26h
+sausage-store-backend-66866fbf66-hnq78          1/1     Running   229 (6m39s ago)   19h
+sausage-store-backend-report-5dcf7bf587-bkzsw   1/1     Running   61 (23h ago)      28h
+sausage-store-frontend-958c66ffc-ljsf2          1/1     Running   0                 26h
+vault-0                                         1/1     Running   0                 20h
+                                                                                           
 ```
 
 Проверка Helm-релиза:
